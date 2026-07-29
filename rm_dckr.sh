@@ -5,11 +5,11 @@
 # Author: peterweissdk
 # Email: peterweissdk@flems.dk
 # Date: 2025-01-06
-# Version: v1.1.0
+# Version: v1.2.0
 # Usage: Run script, follow instructions or -h for help
 # ----------------------------------------------------------------------------
 
-VERSION="1.1.0"
+VERSION="1.2.0"
 SCRIPT_NAME="rm_dckr"
 SCRIPT_URL="https://raw.githubusercontent.com/peterweissdk-priv/rm_dckr/main/rm_dckr.sh"
 
