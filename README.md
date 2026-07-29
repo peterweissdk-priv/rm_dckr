@@ -18,6 +18,14 @@ rm dckr, is a shell script tool designed to help you clean up Docker resources, 
 
 ## 🚀 Quick Start
 
+### One-line Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/peterweissdk-priv/rm_dckr/main/install.sh | bash
+```
+
+### Manual Install
+
 1. Clone this repository:
    ```bash
    git clone https://github.com/peterweissdk/rm_dckr.git
@@ -33,22 +41,28 @@ rm dckr, is a shell script tool designed to help you clean up Docker resources, 
    ./rm_dckr.sh
    ```
 
-4. Optional: Install the script system-wide:
-   ```bash
-   ./rm_dckr.sh --install
-   ```
+## 📖 Usage
 
-### Usage Options
-- `-i, --install`: Install the script system-wide
-- `-u, --update-version`: Update the script version
-- `-v, --version`: Display current version
-- `-h, --help`: Show help message
+```bash
+rm_dckr [OPTIONS]
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-h, --help` | Display help message |
+| `-v, --version` | Display current version |
+| `-u, --update` | Update rm_dckr to the latest version |
+
+Without options, the script will interactively prompt to remove Docker resources.
 
 ## 📝 Directory Structure
 
 ```bash
 rm_dckr/
 ├── .git
+├── install.sh
 ├── LICENSE
 ├── README.md
 └── rm_dckr.sh
