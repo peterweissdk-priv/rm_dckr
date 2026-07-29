@@ -9,104 +9,115 @@
 # Usage: Run script, follow instructions or -h for help
 # ----------------------------------------------------------------------------
 
-# Installs script
-install() {
-    read -p "Do you want to install this script? (yes/no): " answer
-    case $answer in
-        [Yy]* )
-            # Set default installation path
-            default_path="/usr/local/bin"
-            
-            # Prompt for installation path
-            read -p "Enter the installation path [$default_path]: " install_path
-            install_path=${install_path:-$default_path}  # Use default if no input
+VERSION="1.1.0"
+SCRIPT_NAME="rm_dckr"
+SCRIPT_URL="https://raw.githubusercontent.com/peterweissdk-priv/rm_dckr/main/rm_dckr.sh"
 
-            # Get the filename of the script
-            script_name=$(basename "$0")
+# Function to display help
+show_help() {
+    echo ""
+    echo "Usage: ${SCRIPT_NAME} [OPTIONS]"
+    echo ""
+    echo "Tool designed to help you clean up Docker resources"
+    echo ""
+    echo "Options:"
+    echo "  -h, --help      Display this help message"
+    echo "  -v, --version   Display the current version"
+    echo "  -u, --update    Update ${SCRIPT_NAME} to the latest version"
+    echo ""
+    echo "Without options, the script will interactively prompt to remove:"
+    echo "  - All Docker containers"
+    echo "  - All Docker images"
+    echo "  - All Docker networks"
+    echo "  - All Docker volumes"
+    echo ""
+}
 
-            # Copy the script to the specified path
-            echo "Copying $script_name to $install_path..."
-            
-            # Check if the user has write permissions
-            if [ ! -w "$install_path" ]; then
-                echo "You need root privileges to install the script in $install_path."
-                if sudo cp "$0" "$install_path/$script_name"; then
-                    sudo chmod +x "$install_path/$script_name"
-                    echo "Script installed successfully."
-                else
-                    echo "Failed to install script."
-                    exit 1
-                fi
-            else
-                if cp "$0" "$install_path/$script_name"; then
-                    chmod +x "$install_path/$script_name"
-                    echo "Script installed successfully."
-                else
-                    echo "Failed to install script."
-                    exit 1
-                fi
-            fi
-            ;;
-        [Nn]* )
-            echo "Exiting script."
+# Function to display version
+show_version() {
+    echo "${SCRIPT_NAME} version ${VERSION}"
+}
+
+# Function to update the script
+update_script() {
+    echo "🔍 Checking for updates..."
+    
+    # Get remote version
+    remote_version=$(curl -fsSL "$SCRIPT_URL" 2>/dev/null | grep -m1 '^VERSION=' | cut -d'"' -f2)
+    
+    if [ -z "$remote_version" ]; then
+        echo "⛔ Failed to check for updates"
+        exit 1
+    fi
+    
+    if [ "$remote_version" = "$VERSION" ]; then
+        echo "✅ You are already running the latest version (${VERSION})"
+        exit 0
+    fi
+    
+    echo "📦 New version available: ${remote_version} (current: ${VERSION})"
+    echo "📥 Downloading update..."
+    
+    # Create temp file
+    tmp_file=$(mktemp)
+    trap "rm -f $tmp_file" EXIT
+    
+    if ! curl -fsSL "$SCRIPT_URL" -o "$tmp_file"; then
+        echo "⛔ Failed to download update"
+        exit 1
+    fi
+    
+    # Get the path of the current script
+    script_path=$(realpath "$0")
+    
+    echo "⚙️  Installing update..."
+    if [ -w "$script_path" ]; then
+        if cp "$tmp_file" "$script_path" && chmod 755 "$script_path"; then
+            echo "✅ Updated successfully to version ${remote_version}"
+        else
+            echo "⛔ Failed to install update"
+            exit 1
+        fi
+    elif sudo -n true 2>/dev/null; then
+        if sudo cp "$tmp_file" "$script_path" && sudo chmod 755 "$script_path"; then
+            echo "✅ Updated successfully to version ${remote_version}"
+        else
+            echo "⛔ Failed to install update"
+            exit 1
+        fi
+    else
+        echo "You need root privileges to update the script."
+        if sudo cp "$tmp_file" "$script_path" && sudo chmod 755 "$script_path"; then
+            echo "✅ Updated successfully to version ${remote_version}"
+        else
+            echo "⛔ Failed to install update"
+            exit 1
+        fi
+    fi
+    exit 0
+}
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            show_help
             exit 0
             ;;
-        * )
-            echo "Please answer yes or no."
-            install
+        -v|--version)
+            show_version
+            exit 0
+            ;;
+        -u|--update)
+            update_script
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use -h or --help for usage information"
+            exit 1
             ;;
     esac
-
-    exit 0
-}
-
-# Updates version of script
-update_version() {
-    # Extract the current version from the script header
-    version_line=$(grep "^# Version:" "$0")
-    current_version=${version_line#*: }  # Remove everything up to and including ": "
-    
-    echo "Current version: $current_version"
-    
-    # Prompt the user for a new version
-    read -p "Enter new version (current: $current_version): " new_version
-    
-    # Update the version in the script
-    sed -i "s/^# Version: .*/# Version: $new_version/" "$0"
-    
-    echo "Version updated to: $new_version"
-
-    exit 0
-}
-
-# Prints out version
-version() {
-    # Extract the current version from the script header
-    version_line=$(grep "^# Version:" "$0")
-    current_version=${version_line#*: }  # Remove everything up to and including ": "
-    
-    echo "Script version: $current_version"
-
-    exit 0
-}
-
-# Prints out help
-help() {
-    echo "Run script to setup a new shell script file."
-    echo "Usage: $0 [-i | --install] [-u | --update-version] [-v | --version] [-h | --help]"
-
-    exit 0
-}
-
-# Check for flags
-while [[ "$#" -gt 0 ]]; do
-    case $1 in
-        -i|--install) install; shift ;;
-        -u|--update-version) update_version; shift ;;
-        -v|--version) version; shift ;;
-        -h|--help) help; shift ;;
-        *) echo "Unknown option: $1"; help; exit 1 ;;
-    esac
+    shift
 done
 
 # Function to prompt for user confirmation with a default of 'y'
